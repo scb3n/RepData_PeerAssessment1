@@ -7,24 +7,27 @@ output:
 
 ## Loading and preprocessing the data
 Load the packages required for the analysis. Load the data by reading the csv file which should be located in the working directory. Convert the date strings into POSIXct dates. Need POSIXct instead of the default result of strptime (POSIXlt) so that can group_by the date in subsequent steps.
+
 ```{r echo=TRUE, warning=FALSE, message=FALSE}
 library(dplyr)
 library(ggplot2)
-library(pander)
-act <- read.csv("./activity.csv")
-act$date <- as.POSIXct(strptime(act$date, "%Y-%m-%d"))
+activities <- read.csv("./activity.csv")
+activities$date <- as.POSIXct(strptime(activities$date, "%Y-%m-%d"))
 ```
 
 ## What is mean total number of steps taken per day?
-Use dplyr and ggplot2 packages to group and summarize data as well as plot the histogram. Remove NAs from the dataset.
+Use dplyr and ggplot2 packages to group and summarize data as well as plot the histogram. Remove NAs from the dataset. Select a binwidth for the plot (1000) that shows a good distribution of the number of steps taken in a day.
+
 ```{r echo=TRUE}
-dat <- act[complete.cases(act),]
-dat <- dat %>% group_by(date) %>% summarise(sum = sum(steps), mean = mean(steps), median = median(steps))
+dat <- activities[complete.cases(activities),]
+dat <- dat %>% group_by(date) %>% summarise(nsteps = sum(steps))
 
-ggplot(dat, aes(x=date, y=sum)) + geom_bar(stat = "identity") + 
-  labs(title = "Total Number of Steps Taken Each Day", x = "Date", y = "Number of Steps")
+ggplot(dat, aes(nsteps)) + geom_histogram(binwidth = 1000) + 
+  labs(title = "Total Number of Steps Taken Each Day", x = "Steps Per Day", y = "Number of Days")
 
-pander(dat)
+# calculate the mean and median total number of steps taken per day
+mean(dat$nsteps)
+median(dat$nsteps)
 
 ```
 
@@ -32,7 +35,14 @@ pander(dat)
 ## What is the average daily activity pattern?
 
 ```{r echo=TRUE}
+dat <- activities[complete.cases(activities),]
+dat <- dat %>% group_by(interval) %>% summarise(avgsteps = mean(steps))
 
+ggplot(dat, aes(x = interval, y = avgsteps)) + geom_line() +
+    labs(title = "Average Number of Steps Taken by Interval", x = "Interval", y = "Average Number of Steps")
+
+# interval with most steps on average
+dat$interval[dat$avgsteps == max(dat$avgsteps)]
 ```
 
 ## Imputing missing values
